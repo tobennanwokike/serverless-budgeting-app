@@ -1,10 +1,10 @@
 name: Deploy Budgeting app
 
 # Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the main branch
+# events but only for the main and prod branches
 on:
   push:
-    branches: [ main ]
+    branches: [ main, prod ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
