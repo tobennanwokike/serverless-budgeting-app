@@ -1,0 +1,18 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "users",
+    "type": "object",
+    "properties": {
+      "email": {
+        "type": "string",
+        "pattern": "^\\S+@\\S+\\.\\S+$",
+        "format": "email"
+      },
+      "password": {
+        "type": "string",
+        "minLength": 6
+      }
+    },
+    "required": ["email", "password"],
+    "additionalProperties": false
+}
