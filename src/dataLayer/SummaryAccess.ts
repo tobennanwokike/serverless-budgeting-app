@@ -4,6 +4,7 @@ import * as AWS from 'aws-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 
 import { SummaryItem } from '../models/SummaryItem'
+import { SummaryUpdate } from '../models/SummaryUpdate'
 import { createLogger } from '../utils/logger'
 
 const logger = createLogger('summaryAccess')
@@ -45,6 +46,24 @@ export class SummaryAccess {
 
 
     return item as SummaryItem
+  }
+
+  async updateSummaryItem(userId: string, summaryUpdate: SummaryUpdate) {
+    logger.info(`Updating summary item for ${userId} in ${this.summaryTable}`)
+   
+
+    await this.docClient.update({
+      TableName: this.summaryTable,
+      Key: {
+        userId
+      },
+      UpdateExpression: 'set totalCredit = :totalCredit, totalDebit = :totalDebit, updatedAt = :updatedAt',
+      ExpressionAttributeValues: {
+        ":totalCredit": summaryUpdate.totalCredit,
+        ":totalDebit": summaryUpdate.totalDebit,
+        ":updatedAt": new Date().toISOString()
+      }
+    }).promise()   
   }
 
   

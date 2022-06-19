@@ -39,6 +39,9 @@ custom:
       - name: LoginUserRequest
         contentType: application/json
         schema: ${file(models/login_user.json)}
+      - name: CreateTransactionRequest
+        contentType: application/json
+        schema: ${file(models/create_transaction.json)}
 
 functions:
 
@@ -116,6 +119,53 @@ functions:
         Resource:
           - "*"
 
+  CreateTransaction:
+    handler: src/lambda/http/createTransaction.handler
+    events:
+      - http:
+          method: post
+          path: transactions
+          cors: true
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - UserPool
+                - Arn
+            claims:
+              - email
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new Transaction
+            description: Create a new Transaction
+            requestModels:
+              'application/json': CreateTransactionRequest
+
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TRANSACTIONS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+          - dynamodb:GetItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SUMMARY_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:GetSamplingRules
+          - xray:GetSamplingTargets
+          - xray:GetSamplingStatisticSummaries
+          - xray:BatchGetTraces
+          - xray:GetServiceGraph
+          - xray:GetTraceGraph
+          - xray:GetTraceSummaries
+          - xray:GetGroups
+          - xray:GetGroup
+          - xray:PutTraceSegments
+        Resource:
+          - "*"
 
 
 resources:
