@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "transactions",
+    "type": "object",
+    "properties": {
+      "amount": {
+        "type": "number",
+        "minimum": 1
+      },
+      "title": {
+        "type": "string"
+      }
+    },
+    "required": ["amount", "category"],
+    "additionalProperties": false
+}

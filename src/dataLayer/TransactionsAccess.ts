@@ -4,6 +4,7 @@ import * as AWS from 'aws-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 
 import { TransactionItem } from '../models/TransactionItem'
+import { TransactionUpdate } from '../models/TransactionUpdate'
 import { createLogger } from '../utils/logger'
 
 const logger = createLogger('transactionsAccess')
@@ -61,6 +62,37 @@ export class TransactionsAccess {
     const item = result.Item
 
     return item as TransactionItem
+  }
+
+  async deleteTransactionItem(transactionId: string) {
+    logger.info(`Deleting transaction item ${transactionId} from ${this.transactionsTable}`)
+
+    await this.docClient.delete({
+      TableName: this.transactionsTable,
+      Key: {
+        transactionId
+      }
+    }).promise()    
+  }
+
+  
+
+  async updateTransactionItem(transactionId: string, transactionUpdate: TransactionUpdate) {
+    logger.info(`Updating transaction item ${transactionId} in ${this.transactionsTable}`)
+   
+
+    await this.docClient.update({
+      TableName: this.transactionsTable,
+      Key: {
+        transactionId
+      },
+      UpdateExpression: 'set amount = :amount, title = :title, updatedAt = :updatedAt',
+      ExpressionAttributeValues: {
+        ":amount": transactionUpdate.amount,
+        ":title": transactionUpdate.title,
+        ":updatedAt": new Date().toISOString()
+      }
+    }).promise()   
   }
 
   
