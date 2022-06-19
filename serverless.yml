@@ -10,7 +10,7 @@ provider:
   name: aws
   runtime: nodejs14.x
 
-  stage: ${opt:stage, 'dev'}
+  stage: ${opt:stage, 'prod'}
   region: ${opt:region, 'us-east-1'}
 
   environment:

@@ -4,7 +4,7 @@ name: Deploy Budgeting app
 # events but only for the main and prod branches
 on:
   push:
-    branches: [ main, prod ]
+    branches: [ main, dev ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
