@@ -1,11 +1,162 @@
 service: budgeting-app
 
+plugins:
+  - serverless-webpack
+  - serverless-iam-roles-per-function
+  - serverless-reqvalidator-plugin
+  - serverless-aws-documentation
+
 provider:
   name: aws
   runtime: nodejs14.x
 
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+
+  environment:
+    TRANSACTIONS_TABLE: Transactions-Budgeting-${self:provider.stage}
+    SUMMARY_TABLE: Summary-Budgeting-${self:provider.stage}
+    TRANSACTIONS_BY_USER_INDEX: TransactionsByUserIndex
+    USER_POOL_ID: !Ref UserPool
+    CLIENT_ID: !Ref UserClient
+
+
+  tracing:
+    lambda: true
+    apiGateway: true
+
+custom:
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: Budgeting Application
+        description: Serverless Budgeting application
+    models:
+      - name: CreateUserRequest
+        contentType: application/json
+        schema: ${file(models/create_user.json)}
 
 functions:
 
-  
+  SignupUser:
+    handler: src/lambda/http/createUser.handler
+    events:
+      - http:
+          path: signup
+          method: post
+          cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new User
+            description: Create a new User
+            requestModels:
+              'application/json': CreateUserRequest
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - cognito-idp:AdminInitiateAuth
+          - cognito-idp:AdminCreateUser
+          - cognito-idp:AdminSetUserPassword
+        Resource: "*"
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SUMMARY_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:GetSamplingRules
+          - xray:GetSamplingTargets
+          - xray:GetSamplingStatisticSummaries
+          - xray:BatchGetTraces
+          - xray:GetServiceGraph
+          - xray:GetTraceGraph
+          - xray:GetTraceSummaries
+          - xray:GetGroups
+          - xray:GetGroup
+          - xray:PutTraceSegments
+        Resource:
+          - "*"
 
+
+resources:
+  Resources:
+    # API Gateway
+    GatewayResponseDefault4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: ApiGatewayRestApi
+
+    # DynamoDB
+    TransactionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: transactionId
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: transactionId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.TRANSACTIONS_TABLE}
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.TRANSACTIONS_BY_USER_INDEX}
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    SummaryTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.SUMMARY_TABLE}
+
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+
+    #Cognito
+    UserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: budgeting-app-pool-${self:provider.stage}
+        Schema:
+          - Name: email
+            Required: true
+            Mutable: true
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 6
+        AutoVerifiedAttributes: ["email"]
+
+    UserClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: budgeting-app-pool-ui-${self:provider.stage}
+        GenerateSecret: false
+        UserPoolId: !Ref UserPool
+        AccessTokenValidity: 5
+        IdTokenValidity: 5
+        ExplicitAuthFlows:
+          - "ADMIN_NO_SRP_AUTH"
