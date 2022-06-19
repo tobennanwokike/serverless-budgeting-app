@@ -99,8 +99,8 @@ See screenshots of CI/CD setup below.
 
 ## Postman Documentation
 
-See link to Postman Documentation below if you would like to test out the API after deployment. <br><br>
-
+See link to Postman Documentation below if you would like to test out the API after deployment. <br>
 https://documenter.getpostman.com/view/10489988/UzBmMSfw
 
+## Remarks
 Please feel free to raise a PR if you feel that any aspect of the project can be improved on. Thank you! 😄
