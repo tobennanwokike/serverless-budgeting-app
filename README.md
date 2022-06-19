@@ -74,7 +74,7 @@ This api is built as a serverless REST api, using the [Serverless Framework](htt
 
 ### Solutions Architecture
 
-![alt text](budgeting-app.jpg)
+![alt text](serverless-budget-api.jpg)
 
 ## Deployment Instructions
 
