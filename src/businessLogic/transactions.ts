@@ -168,3 +168,63 @@ export async function updateTransaction(userId: string, transactionId: string, u
     })
   }
 }
+
+export async function deleteTransaction(userId: string, transactionId: string) {
+  logger.info(`Deleting transaction ${transactionId} for user ${userId}`, { userId, transactionId })
+
+  const item = await transactionsAccess.getTransactionItem(transactionId)
+
+  if (!item)
+    return {
+      statusCode: 404,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: JSON.stringify({
+        message: `Transaction not found`
+      })
+    }
+
+  if (item.userId !== userId) {
+    logger.error(`User ${userId} does not have permission to delete transaction ${transactionId}`)
+    return {
+      statusCode: 403,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: JSON.stringify({
+        message: `You are not authorized to access this resource`
+      })
+    }
+  }
+
+  //update summary to reflect new transaction
+  const userSummary = await summaryAccess.getSummaryItem(userId)
+
+  if(item.category == "credit"){
+    userSummary.totalCredit -= item.amount
+  }
+  else{
+    userSummary.totalDebit -= item.amount
+  }
+
+  const updateSummary: SummaryUpdate = {
+    totalCredit: userSummary.totalCredit,
+    totalDebit: userSummary.totalDebit
+  }
+
+  await summaryAccess.updateSummaryItem(userId, updateSummary)
+
+  await transactionsAccess.deleteTransactionItem(transactionId)
+
+  return {
+    statusCode: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true
+    },
+    body: ''
+  }
+}

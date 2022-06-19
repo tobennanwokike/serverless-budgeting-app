@@ -257,7 +257,6 @@ functions:
                 - Arn
             claims:
               - email
-
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -284,7 +283,47 @@ functions:
         Resource:
           - "*"
 
-
+  DeleteTransaction:
+    handler: src/lambda/http/deleteTransaction.handler
+    events:
+      - http:
+          method: delete
+          path: transactions/{transactionId}
+          cors: true
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - UserPool
+                - Arn
+            claims:
+              - email
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:DeleteItem
+          - dynamodb:GetItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TRANSACTIONS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+          - dynamodb:GetItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.SUMMARY_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:GetSamplingRules
+          - xray:GetSamplingTargets
+          - xray:GetSamplingStatisticSummaries
+          - xray:BatchGetTraces
+          - xray:GetServiceGraph
+          - xray:GetTraceGraph
+          - xray:GetTraceSummaries
+          - xray:GetGroups
+          - xray:GetGroup
+          - xray:PutTraceSegments
+        Resource:
+          - "*"
 
   GetSummary:
     handler: src/lambda/http/getSummary.handler
@@ -302,7 +341,6 @@ functions:
                 - Arn
             claims:
               - email
-
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -372,6 +410,7 @@ resources:
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.SUMMARY_TABLE}
 
+    #Request Validator
     RequestBodyValidator:
       Type: AWS::ApiGateway::RequestValidator
       Properties:
