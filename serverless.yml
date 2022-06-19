@@ -1,4 +1,4 @@
-service: budgeting-app
+service: budget-app
 
 plugins:
   - serverless-webpack
@@ -14,8 +14,8 @@ provider:
   region: ${opt:region, 'us-east-1'}
 
   environment:
-    TRANSACTIONS_TABLE: Transactions-Budgeting-${self:provider.stage}
-    SUMMARY_TABLE: Summary-Budgeting-${self:provider.stage}
+    TRANSACTIONS_TABLE: Transactions-Budget-${self:provider.stage}
+    SUMMARY_TABLE: Summary-Budget-${self:provider.stage}
     TRANSACTIONS_BY_USER_INDEX: TransactionsByUserIndex
     USER_POOL_ID: !Ref UserPool
     CLIENT_ID: !Ref UserClient
@@ -30,8 +30,8 @@ custom:
     api:
       info:
         version: v1.0.0
-        title: Budgeting Application
-        description: Serverless Budgeting application
+        title: Budget Application
+        description: Serverless Budget application
     models:
       - name: CreateUserRequest
         contentType: application/json
@@ -140,7 +140,7 @@ resources:
     UserPool:
       Type: AWS::Cognito::UserPool
       Properties:
-        UserPoolName: budgeting-app-pool-${self:provider.stage}
+        UserPoolName: budget-app-pool-${self:provider.stage}
         Schema:
           - Name: email
             Required: true
@@ -153,7 +153,7 @@ resources:
     UserClient:
       Type: AWS::Cognito::UserPoolClient
       Properties:
-        ClientName: budgeting-app-pool-ui-${self:provider.stage}
+        ClientName: budget-app-pool-ui-${self:provider.stage}
         GenerateSecret: false
         UserPoolId: !Ref UserPool
         AccessTokenValidity: 5
