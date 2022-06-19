@@ -4,6 +4,7 @@ import { UserAccess } from '../dataLayer/UserAccess'
 import { SummaryAccess } from '../dataLayer/SummaryAccess'
 import { SummaryItem } from '../models/SummaryItem'
 import { CreateUserRequest } from '../requests/CreateUserRequest'
+import { LoginUserRequest } from '../requests/LoginUserRequest'
 import { createLogger } from '../utils/logger'
 
 
@@ -40,3 +41,36 @@ export async function createUser(createUserRequest: CreateUserRequest) {
   }
 }
 
+export async function loginUser(loginUserRequest: LoginUserRequest) {
+
+    logger.info(`Logging in user ${loginUserRequest.email}`)
+  
+    const response = await userAccess.loginUserItem(loginUserRequest)
+
+    if(response.AuthenticationResult.IdToken){
+        return {
+            statusCode: 200,
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Credentials': true
+            },
+            body: JSON.stringify({
+              message: `User was logged in successfully`,
+              token: response.AuthenticationResult.IdToken
+            })
+          }
+    }
+
+    return {
+        statusCode: 401,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Credentials': true
+        },
+        body: JSON.stringify({
+          message: `Unauthorized access`
+        })
+      }
+
+  
+  }

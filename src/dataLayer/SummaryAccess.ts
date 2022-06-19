@@ -17,7 +17,6 @@ export class SummaryAccess {
   constructor(
     private readonly docClient: DocumentClient = new XAWS.DynamoDB.DocumentClient(),
     private readonly summaryTable = process.env.SUMMARY_TABLE,
-    // private readonly transactionsByUserIndex = process.env.TRANSACTIONS_BY_USER_INDEX
   ) {}
 
   async createSummaryItem(summaryItem: SummaryItem) {

@@ -36,6 +36,9 @@ custom:
       - name: CreateUserRequest
         contentType: application/json
         schema: ${file(models/create_user.json)}
+      - name: LoginUserRequest
+        contentType: application/json
+        schema: ${file(models/login_user.json)}
 
 functions:
 
@@ -77,6 +80,42 @@ functions:
           - xray:PutTraceSegments
         Resource:
           - "*"
+
+  LoginUser:
+    handler: src/lambda/http/loginUser.handler
+    events:
+      - http:
+          path: login
+          method: post
+          cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Login a new user
+            description: Login a new user
+            requestModels:
+              'application/json': LoginUserRequest
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - cognito-idp:AdminInitiateAuth
+          - cognito-idp:AdminCreateUser
+          - cognito-idp:AdminSetUserPassword
+        Resource: "*"
+      - Effect: Allow
+        Action:
+          - xray:GetSamplingRules
+          - xray:GetSamplingTargets
+          - xray:GetSamplingStatisticSummaries
+          - xray:BatchGetTraces
+          - xray:GetServiceGraph
+          - xray:GetTraceGraph
+          - xray:GetTraceSummaries
+          - xray:GetGroups
+          - xray:GetGroup
+          - xray:PutTraceSegments
+        Resource:
+          - "*"
+
 
 
 resources:
