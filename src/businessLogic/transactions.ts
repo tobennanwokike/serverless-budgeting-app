@@ -14,6 +14,38 @@ const logger = createLogger('transactions')
 const transactionsAccess = new TransactionsAccess()
 const summaryAccess = new SummaryAccess()
 
+export async function getTransactions(userId: string) {
+  logger.info(`Retrieving all transactions for user ${userId}`, { userId })
+
+  const items =  await transactionsAccess.getTransactionItems(userId)
+
+  return {
+    statusCode: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    },
+    body: JSON.stringify({
+      items
+    })
+  }
+}
+
+export async function getTransaction(transactionId: string) {
+  logger.info(`Retrieving transaction with id ${transactionId}`)
+
+  const item = await transactionsAccess.getTransactionItem(transactionId)
+
+  return {
+    statusCode: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    },
+    body: JSON.stringify({
+      item
+    })
+  }
+}
+
 export async function createTransaction(createTransactionRequest: CreateTransactionRequest, userId: string) {
   const transactionId = uuid.v4()
 
